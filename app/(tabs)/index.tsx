@@ -1,98 +1,206 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import HeroTithiCard from '@/components/HeroTithiCard';
+import InauspiciousGrid from '@/components/InauspiciousGrid';
+import PanchangaDetailsCard from '@/components/PanchangaDetailsCard';
+import SunTimingsCards from '@/components/SunTimingsCards';
+import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import SettingsModal from '../../components/SettingsModal';
+import { Colors, Spacing, Typography } from '../../constants/DesignTokens';
+import { Strings } from '../../constants/Strings';
+import { useTheme } from '../../hooks/useTheme';
+import { getPanchanga, PanchangaData } from '../../services/PanchangaService';
+import { useAppStore } from '../../store';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { currentLanguage, selectedCity } = useAppStore();
+  const { colors, isDark } = useTheme();
+  const labels = Strings[currentLanguage];
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const [data, setData] = useState<PanchangaData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const now = new Date();
+        const result = getPanchanga(now, selectedCity.lat, selectedCity.lng, currentLanguage);
+        setData(result);
+      } catch (e) {
+        console.error("Error fetching panchanga:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [selectedCity, currentLanguage]);
+
+  // Format current date with localization
+  const formatDate = () => {
+    const now = new Date();
+    const day = now.getDate();
+    const monthIndex = now.getMonth();
+    const monthName = labels.months[monthIndex];
+    return `${day} ${monthName}`;
+  };
+
+  // Get day of week
+  const getDayOfWeek = () => {
+    if (!data) return labels.today;
+    return data.vara;
+  };
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Large Title Header with Language Toggle */}
+        <View style={styles.headerContainer}>
+          <View style={styles.headerLeft}>
+            <Text style={[styles.largeTitle, { color: colors.textPrimary }]}>{getDayOfWeek()}</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{formatDate()}  {selectedCity.name}</Text>
+          </View>
+
+          {/* Settings Button in Top Right */}
+          <View style={styles.headerRight}>
+            <SettingsModal />
+          </View>
+        </View>
+
+        {/* Hero Card - Tithi with Progress Ring */}
+        {!loading && data && (
+          <HeroTithiCard data={data} language={currentLanguage} />
+        )}
+
+        {loading && (
+          <View style={styles.loadingCard}>
+            <Text style={styles.loadingText}>{labels.loading}</Text>
+          </View>
+        )}
+
+        {/* Panchanga Details - Inset Grouped List */}
+        {!loading && data && (
+          <PanchangaDetailsCard data={data} language={currentLanguage} />
+        )}
+
+        {/* Samvatsara & Season Card */}
+        {!loading && data && (
+          <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{labels.samvatsara}</Text>
+              <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{data.samvatsara}</Text>
+            </View>
+            <View style={[styles.separator, { backgroundColor: isDark ? '#333' : '#E5E5EA' }]} />
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{labels.ayana}</Text>
+              <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{data.ayana}</Text>
+            </View>
+            <View style={[styles.separator, { backgroundColor: isDark ? '#333' : '#E5E5EA' }]} />
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{labels.ritu}</Text>
+              <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{data.ritu}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Sun Timings Cards */}
+        {!loading && data && (
+          <SunTimingsCards data={data} language={currentLanguage} />
+        )}
+
+        {/* Inauspicious Periods */}
+        {!loading && data && (
+          <InauspiciousGrid data={data} language={currentLanguage} />
+        )}
+
+
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  safeArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: Spacing.base,
+    paddingBottom: Spacing.xxl,
+  },
+  headerContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.xs,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    marginTop: 4,
+  },
+  largeTitle: {
+    ...Typography.title.large,
+    color: Colors.text.primary.light,
+  },
+  subtitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginTop: Spacing.xs,
+    maxWidth: '80%',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  subtitle: {
+    ...Typography.subheadline,
+    color: Colors.text.secondary.light,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  changeText: {
+    ...Typography.subheadline,
+    color: Colors.semantic.blue,
+    fontWeight: '500',
+  },
+  loadingCard: {
+    backgroundColor: Colors.surface.light,
+    borderRadius: 22,
+    padding: Spacing.xxxl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 200,
+  },
+  loadingText: {
+    ...Typography.body,
+    color: Colors.text.secondary.light,
+  },
+  infoCard: {
+    borderRadius: 16,
+    paddingHorizontal: Spacing.base,
+    marginVertical: Spacing.sm,
+    shadowColor: Colors.shadow.color,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.base,
+  },
+  infoLabel: {
+    ...Typography.body,
+  },
+  infoValue: {
+    ...Typography.callout,
+    fontWeight: '600',
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 0,
   },
 });
+
