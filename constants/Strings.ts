@@ -2,7 +2,7 @@ export type Language = 'en' | 'kn' | 'sa';
 
 export const Strings = {
     en: {
-        appName: "Panchanga",
+        appName: "VedaKal",
         tithi: "Tithi",
         nakshatra: "Nakshatra",
         vara: "Vara",
@@ -28,7 +28,7 @@ export const Strings = {
         months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     },
     kn: {
-        appName: "ಪಂಚಾಂಗ",
+        appName: "ವೇದಕಾಲ (VedaKal)",
         tithi: "ತಿಥಿ",
         nakshatra: "ನಕ್ಷತ್ರ",
         vara: "ವಾರ",
@@ -54,7 +54,7 @@ export const Strings = {
         months: ["ಜನವರಿ", "ಫೆಬ್ರವರಿ", "ಮಾರ್ಚ್", "ಏಪ್ರಿಲ್", "ಮೇ", "ಜೂನ್", "ಜುಲೈ", "ಆಗಸ್ಟ್", "ಸೆಪ್ಟೆಂಬರ್", "ಅಕ್ಟೋಬರ್", "ನವೆಂಬರ್", "ಡಿಸೆಂಬರ್"]
     },
     sa: {
-        appName: "पञ्चाङ्गम्",
+        appName: "वेदकाल (VedaKal)",
         tithi: "तिथिः",
         nakshatra: "नक्षत्रम्",
         vara: "वासरः",

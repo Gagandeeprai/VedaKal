@@ -1,16 +1,17 @@
 import HeroTithiCard from '@/components/HeroTithiCard';
 import InauspiciousGrid from '@/components/InauspiciousGrid';
 import PanchangaDetailsCard from '@/components/PanchangaDetailsCard';
+import SettingsModal from '@/components/SettingsModal';
 import SunTimingsCards from '@/components/SunTimingsCards';
+import { Colors, Spacing, Typography } from '@/constants/DesignTokens';
+import { Strings } from '@/constants/Strings';
+import { useTheme } from '@/hooks/useTheme';
+import { getPanchanga, PanchangaData } from '@/services/PanchangaService';
+import { useAppStore } from '@/store';
+import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SettingsModal from '../../components/SettingsModal';
-import { Colors, Spacing, Typography } from '../../constants/DesignTokens';
-import { Strings } from '../../constants/Strings';
-import { useTheme } from '../../hooks/useTheme';
-import { getPanchanga, PanchangaData } from '../../services/PanchangaService';
-import { useAppStore } from '../../store';
 
 export default function HomeScreen() {
   const { currentLanguage, selectedCity } = useAppStore();
@@ -77,7 +78,11 @@ export default function HomeScreen() {
 
         {loading && (
           <View style={styles.loadingCard}>
-            <Text style={styles.loadingText}>{labels.loading}</Text>
+            <Image
+              source={require('../assets/logo-bw.png')}
+              style={styles.loadingLogo}
+              contentFit="contain"
+            />
           </View>
         )}
 
@@ -170,6 +175,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 200,
+  },
+  loadingLogo: {
+    width: 64,
+    height: 64,
+    opacity: 0.6,
   },
   loadingText: {
     ...Typography.body,
