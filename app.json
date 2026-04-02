@@ -2,7 +2,7 @@
   "expo": {
     "name": "VedaKal",
     "slug": "vedakal",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "vedakal",
@@ -11,13 +11,17 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.enoughblackberry.vedakal",
+      "versionCode": 2,
+      "permissions": [
+        "NOTIFICATIONS"
+      ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundImage": "./assets/adaptive-icon-background.png"
+        "backgroundImage": "./assets/adaptive-icon-background.png",
+        "backgroundColor": "#E6F4FE"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.enoughblackberry.vedakal"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
