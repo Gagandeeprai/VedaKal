@@ -7,7 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "vedakal",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -17,7 +16,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundImage": "./assets/adaptive-icon-background.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.enoughblackberry.vedakal"
     },
@@ -47,7 +45,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "6093a6c4-dd4a-4fc3-810f-7a906d3bb964"
+        "projectId": "bcf4bd89-704d-432e-8d54-cc042d6f536f"
       }
     }
   }

@@ -6,6 +6,7 @@ import { Language } from '../constants/Strings';
 
 export interface PanchangaData {
     tithi: string;
+    tithiIndex: number;
     tithiEndTime?: string;
     nakshatra: string;
     nakshatraEndTime?: string;
@@ -58,9 +59,9 @@ export const getPanchanga = (date: Date, lat: number, lng: number, lang: Languag
 
         // 1. Get Tithi Progress (0-360 deg)
         const getTithiLon = (d: Date) => {
-            const s = Astronomy.SunPosition(d).elon;
-            const mResult = Astronomy.EclipticGeoMoon(d);
-            const m = (mResult as any).elon || (mResult as any).lon || 0;
+            const time = new Astronomy.AstroTime(d);
+            const s = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Sun, time, true)).elon;
+            const m = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Moon, time, true)).elon;
             const sNag = normalize(s - AYANAMSA);
             const mNag = normalize(m - AYANAMSA);
             return normalize(mNag - sNag);
@@ -68,8 +69,8 @@ export const getPanchanga = (date: Date, lat: number, lng: number, lang: Languag
 
         // 2. Get Nakshatra Progress (0-360 deg)
         const getNakLon = (d: Date) => {
-            const mResult = Astronomy.EclipticGeoMoon(d);
-            const m = (mResult as any).elon || (mResult as any).lon || 0;
+            const time = new Astronomy.AstroTime(d);
+            const m = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Moon, time, true)).elon;
             return normalize(m - AYANAMSA);
         };
 
@@ -150,11 +151,11 @@ export const getPanchanga = (date: Date, lat: number, lng: number, lang: Languag
         const calcDate = new Date(calcTime.date.getTime());
 
         // 3. CORE POSITIONS
-        const sunResult = Astronomy.SunPosition(calcTime);
+        const sunResult = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Sun, calcTime, true));
         const sunLong = sunResult.elon;
 
-        const moonResult = Astronomy.EclipticGeoMoon(calcTime);
-        const moonLong = (moonResult as any).elon || (moonResult as any).lon || 0;
+        const moonResult = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Moon, calcTime, true));
+        const moonLong = moonResult.elon || 0;
 
         const sunLongNag = normalize(sunLong - AYANAMSA);
         const moonLongNag = normalize(moonLong - AYANAMSA);
@@ -187,9 +188,24 @@ export const getPanchanga = (date: Date, lat: number, lng: number, lang: Languag
 
         // 5. EXTENDED FEATURES
 
-        // Samvatsara - FIXED OFFSET
+        // Samvatsara - DYNAMIC ASTRONOMICAL OFFSET
         let yearForSamvatsara = date.getFullYear();
-        if (date.getMonth() < 3) yearForSamvatsara -= 1;
+
+        // We only evaluate cross-year boundaries before June of the Gregorian year
+        if (date.getMonth() <= 4) {
+            // Days since the most recent New Moon (Amavasya)
+            const daysSinceNewMoon = longDiff / 12.0;
+
+            // Approximate solar longitude at the time of that New Moon (Sun moves ~0.9856 deg/day)
+            let sunAtNewMoon = normalize(sunLongNag - (daysSinceNewMoon * 0.9856));
+
+            // Ugadi (Chaitra Shukla Pratipada) occurs on the New Moon when the Sun transits Pisces (330°+).
+            // If the Sun's position during the last New Moon was < 330° (and safely > 180° to avoid Aries wrap),
+            // it means we are still in the previous Hindu year (e.g. Phalguna or earlier).
+            if (sunAtNewMoon > 180 && sunAtNewMoon < 330) {
+                yearForSamvatsara -= 1;
+            }
+        }
 
         // Anchor: 2026 -> 39 (Vishvavasu). 2026 - 1987 = 39.
         let samvatsaraIndex = (yearForSamvatsara - 1987) % 60;
@@ -246,6 +262,7 @@ export const getPanchanga = (date: Date, lat: number, lng: number, lang: Languag
 
         return {
             tithi: currentTithi,
+            tithiIndex: tithiIndex % 30,
             tithiEndTime: tithiEndTime,
             nakshatra: currentNakshatra,
             nakshatraEndTime: nakEndTime,

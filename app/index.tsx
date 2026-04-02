@@ -2,12 +2,14 @@ import HeroTithiCard from '@/components/HeroTithiCard';
 import InauspiciousGrid from '@/components/InauspiciousGrid';
 import PanchangaDetailsCard from '@/components/PanchangaDetailsCard';
 import SettingsModal from '@/components/SettingsModal';
+import RemindersModal from '@/components/RemindersModal';
 import SunTimingsCards from '@/components/SunTimingsCards';
 import { Colors, Spacing, Typography } from '@/constants/DesignTokens';
 import { Strings } from '@/constants/Strings';
 import { useTheme } from '@/hooks/useTheme';
 import { getPanchanga, PanchangaData } from '@/services/PanchangaService';
 import { useAppStore } from '@/store';
+import { useReminders } from '@/hooks/useReminders';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -16,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function HomeScreen() {
   const { currentLanguage, selectedCity } = useAppStore();
   const { colors, isDark } = useTheme();
+  useReminders();
   const labels = Strings[currentLanguage];
 
   const [data, setData] = useState<PanchangaData | null>(null);
@@ -67,6 +70,7 @@ export default function HomeScreen() {
 
           {/* Settings Button in Top Right */}
           <View style={styles.headerRight}>
+            <RemindersModal />
             <SettingsModal />
           </View>
         </View>
@@ -146,6 +150,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerRight: {
+    flexDirection: 'row',
+    gap: 12,
     marginTop: 4,
   },
   largeTitle: {
